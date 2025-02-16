@@ -1,0 +1,38 @@
+applicationSet:
+  webhook:
+    ingress:
+      enabled: true
+controller:
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2000Mi
+    requests:
+      cpu: 500m
+      memory: 500Mi
+  # metrics:
+  #   enabled: true
+  #   serviceMonitor:
+  #     enabled: true
+  #     namespace: cattle-monitoring-system
+
+configs:
+  params:
+    server.insecure: true # https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/#traefik-v30
+  secret:
+    createSecret: true
+
+server:
+  certificate:
+    enabled: true
+    secretName: argocd-server-tls
+    domain: argocd.cg.bl4ko.com
+    issuer:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: acme-issuer
+
+  ingress:
+    enabled: true
+    tls: true
+    hostname: argocd.cg.bl4ko.com

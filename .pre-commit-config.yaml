@@ -1,0 +1,71 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-xml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: pretty-format-json
+        args: ["--autofix"]
+      - id: check-case-conflict
+
+
+  # Terraform hooks
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.97.3
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_docs
+      # - id: terraform_providers_lock
+      - id: terraform_tflint
+      - id: terraform_trivy
+      - id: terraform_validate
+      # - id: tfupdate
+
+  # Trivy hooks
+  - repo: https://github.com/mxab/pre-commit-trivy.git
+    rev: v0.14.0
+    hooks:
+      - id: trivyfs-docker
+        args:
+          - --skip-dirs
+          - "*/collections/*"
+          - --skip-dirs
+          - "*/venv/*"
+          - . # last arg indicates the path/file to scan
+      - id: trivyconfig-docker
+        args:
+          - --skip-dirs
+          - "*/collections/*"
+          - --skip-dirs
+          - "*/venv/*"
+          - . # last arg indicates the path/file to scan
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.23.3
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v25.1.2
+    hooks:
+      - id: ansible-lint
+        entry: ./ansible/venv/bin/python -m ansiblelint --project-dir ansible --exclude ansible/collections/*
+
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.17.2
+    hooks:
+      - id: cspell
+        name: cspell
+        description: This hook runs CSpell spellchecker
+        entry: cspell-cli
+        language: node
+        types: [text]
+        args:
+          - --no-must-find-files
+          - --no-progress
+          - --no-summary
+          - --gitignore
+          - --files

@@ -1,0 +1,54 @@
+---
+- name: Display values for argocd secrets helm chart
+  ansible.builtin.debug:
+    msg: "{{ lookup('file', '../../argocd/argocd/values.yml') | from_yaml }}"
+
+- name: Install argocd with helm
+  kubernetes.core.helm:
+    name: argocd
+    release_namespace: argocd
+    create_namespace: true
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    chart_ref: argo-cd
+    chart_repo_url: https://argoproj.github.io/argo-helm
+    state: present
+    values: "{{ lookup('file', '../../argocd/argocd/values.yml') | from_yaml }}"
+
+- name: Wait until argocd pods are ready
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    namespace: argocd
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/instance=argocd
+    wait: true
+    wait_sleep: 5
+    wait_timeout: 180
+
+- name: Deploy argocd chart repo manifest
+  kubernetes.core.k8s:
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    namespace: argocd
+    state: present
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd-chart.repo.yaml') }}"
+
+- name: Deploy argocd values repo manifest
+  kubernetes.core.k8s:
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    namespace: argocd
+    state: present
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd-values.repo.externalsecret.yaml') }}"
+
+- name: Deploy argocd project manifest
+  kubernetes.core.k8s:
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    namespace: argocd
+    state: present
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd.project.yaml') }}"
+
+- name: Deploy argocd app manifest
+  kubernetes.core.k8s:
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    namespace: argocd
+    state: present
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd.app.yaml') }}"

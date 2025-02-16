@@ -1,0 +1,4 @@
+# Required for bitwarden to work:
+# https://github.com/external-secrets/bitwarden-sdk-server?tab=readme-ov-file#install
+bitwarden-sdk-server:
+  enabled: true

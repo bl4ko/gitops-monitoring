@@ -1,0 +1,12 @@
+all:
+  children:
+    k8s_cluster:
+      children:
+        masters:
+          hosts:
+            master-0:
+              ansible_host: 34.118.113.254
+        workers:
+          hosts:
+            worker-0:
+              ansible_host: 34.116.138.73

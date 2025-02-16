@@ -1,0 +1,32 @@
+#cloud-config
+hostname: ${hostname}
+runcmd:
+  - dnf update -y
+  - dnf install -y qemu-guest-agent firewalld
+  - systemctl enable --now qemu-guest-agent
+  - systemctl disable --now firewalld
+  - timedatectl set-timezone Europe/Ljubljana
+  - echo "done" > /tmp/cloud-config.done
+users:
+  - name: ${ci_username}
+    groups:
+${join("\n", [for group in ci_user_extra_groups : "      - ${group}"])}
+    gecos: "CI user created by Cloud-Init"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ci_pubkey}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    passwd: ${ci_hashed_pass}
+  - name: ${username}
+    shell: /bin/bash
+    groups:
+${join("\n", [for group in user_extra_groups : "      - ${group}"])}
+    sudo: ALL=(ALL) ALL
+    gecos: "Main user provisioned by Cloud-Init"
+    ssh_authorized_keys:
+      - ${user_pubkey}
+    lock_passwd: false
+chpasswd:
+  expire: false
+  users:
+    - {name: ${username}, password: ${hashed_password}}

@@ -1,0 +1,30 @@
+---
+# Install python dependencies on the host
+- name: Install pip and git on the host
+  ansible.builtin.dnf:
+    name:
+      - python3-pip
+      - git
+    state: present
+
+- name: Install pip ansible pre-requisites
+  ansible.builtin.pip:
+    name: kubernetes
+    state: present
+
+- name: Install helm
+  ansible.builtin.unarchive:
+    src: https://get.helm.sh/helm-v3.17.0-linux-amd64.tar.gz
+    dest: /usr/bin
+    extra_opts: "--strip-components=1"
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  args:
+    creates: /usr/bin/helm
+
+- name: Install helm diff plugin for better working of kubernetes.core.helm
+  kubernetes.core.helm_plugin:
+    plugin_path: "https://github.com/databus23/helm-diff"
+    state: present

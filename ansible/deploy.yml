@@ -1,0 +1,54 @@
+---
+- name: Setup rke2 cluster
+  hosts: k8s_cluster
+  become: true
+  vars:
+    rke2_server_node_taints:
+      - 'CriticalAddonsOnly=true:NoExecute'
+    rke2_download_kubeconf: true
+    rke2_download_kubeconf_path: ~/.kube/
+    rke2_download_kubeconf_file_name: rke2.yaml
+    rke2_version: v1.32.1+rke2r1
+  vars_files:
+    - ./vault.yml
+  roles:
+    - role: lablabs.rke2
+  tags:
+    - rke2
+
+- name: Setup devops environment
+  hosts: "masters[0]"
+  vars_files:
+    - ./vault.yml
+  become: true
+  vars:
+    use_longhorn: true
+    longhorn_nodes: "{{ groups['workers'] }}"
+    longhorn_disks_config:
+      - path: "/var/lib/longhorn"
+        allowScheduling: true
+    host_kubeconfig_path: /etc/rancher/rke2/rke2.yaml
+    install_argocd: true
+  tasks:
+    - name: Install pkg requirements for ansible.k8s collection
+      ansible.builtin.import_tasks: tasks/ansible_k8s_reqs.yml
+      tags: [ansible-k8s-reqs]
+    - name: Setup worker labels
+      ansible.builtin.import_tasks: tasks/worker_labels.yml
+      tags: [worker-labels]
+    - name: Setup longhorn requirements
+      ansible.builtin.import_tasks: tasks/longhorn_prepare.yml
+      tags: [longhorn]
+      when: use_longhorn
+    - name: Install Cert-manager
+      ansible.builtin.import_tasks: tasks/cert_manager.yml
+      tags: [cert-manager]
+    - name: Install External Secrets
+      ansible.builtin.import_tasks: tasks/external_secrets.yml
+      tags: [external-secrets]
+    - name: Install ArgoCD
+      ansible.builtin.import_tasks: tasks/argocd.yml
+      tags: [argocd]
+      when: install_argocd
+  tags:
+    - devops

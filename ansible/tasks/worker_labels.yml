@@ -1,0 +1,12 @@
+---
+- name: Add worker label to agent nodes
+  kubernetes.core.k8s:
+    state: patched
+    kind: node
+    name: "{{ item }}"
+    kubeconfig: "{{ host_kubeconfig_path }}"
+    definition:
+      metadata:
+        labels:
+          node-role.kubernetes.io/worker: worker
+  loop: "{{ groups['workers'] }}"

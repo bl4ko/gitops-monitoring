@@ -1,0 +1,6 @@
+---
+collections:
+  - name: git+https://github.com/k3s-io/k3s-ansible.git
+    version: master
+  - name: ansible.posix
+  - name: kubernetes.core
