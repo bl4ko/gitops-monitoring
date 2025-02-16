@@ -1,0 +1,24 @@
+# https://github.com/longhorn/longhorn/issues/4853
+preUpgradeChecker:
+  jobEnabled: false
+
+ingress:
+  enabled: true
+  host: longhorn.cg.bl4ko.com
+  tlsSecretName: longhorn-tls
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: ca-issuer
+
+defaultSettings:
+  # https://longhorn.io/docs/1.6.0/nodes-and-volumes/nodes/default-disk-and-node-config/#customizing-default-disks-for-new-nodes
+  createDefaultDiskLabeledNodes: true
+
+# Create volumes on a subset of nodes: https://longhorn.io/kb/tip-only-use-storage-on-a-set-of-nodes/
+global:
+  nodeSelector:
+    # Restrict longhorn components to only nodes labeled with "longhorn.io/role: storage"
+    longhorn.io/role: storage
+
+persistence:
+  defaultClass: true

@@ -1,0 +1,34 @@
+#cloud-config
+users:
+  - name: ${ci_username}
+    groups:
+      - wheel
+    gecos: "CI user created by Cloud-Init"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ci_pubkey}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    passwd: ${ci_hashed_password}
+  - name: ${username}
+    shell: /bin/bash
+    groups:
+      - wheel
+    sudo: ALL=(ALL) ALL
+    gecos: "Main user provisioned by Cloud-Init"
+    ssh_authorized_keys:
+      - ${user_pubkey}
+    lock_passwd: false
+    passwd: ${hashed_password}
+runcmd:
+  - sudo dnf update -y
+  - sudo dnf install curl iptables -y
+  # - curl -sfL https://get.rke2.io | sudo sh -
+  # - sudo systemctl enable rke2-server.service
+  # - sudo systemctl start rke2-server.service
+  # - sudo systemctl status rke2-server.service
+  # - mkdir -p /home/${username}/.kube
+  # - sudo cp /etc/rancher/rke2/rke2.yaml /home/${username}/.kube/config
+  # - "echo 'export KUBECONFIG=/home/${username}/.kube/config' >> /home/${username}/.bash_profile"
+  # - "echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /home/${username}/.bash_profile"
+  # - "sudo chown -R ${username}: /home/${username}"
+  - echo "done" /tmp/cloud-config.done

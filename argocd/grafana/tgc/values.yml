@@ -1,0 +1,321 @@
+admin:
+  existingSecret: "grafana-admin"
+  userKey: admin-user
+  passwordKey: admin-password
+
+ingress:
+  enabled: true
+  hosts:
+    - grafana.cg.bl4ko.com
+  annotations:
+    cert-manager.io/cluster-issuer: acme-issuer
+    kubernetes.io/ingress.class: "nginx"
+  tls:
+    - secretName: grafana-tls
+      hosts:
+        - grafana.cg.bl4ko.com
+
+serviceAccount:
+  create: true
+  name: grafana-sa
+resources: null
+deploymentStrategy:
+  type: Recreate # Required when using a PVC
+persistence:
+  type: pvc
+  enabled: true
+  accessModes: ["ReadWriteOnce"]
+  size: 1Gi
+sidecar:
+  alerts:
+    searchNamespace: ALL
+  dashboards:
+    searchNamespace: ALL
+grafana.ini:
+  server:
+    domain: grafana.cg.bl4ko.com
+serviceMonitor:
+  enabled: true
+  labels:
+    release: monitor
+alerting:
+  policies.yaml:
+    apiVersion: 1
+    policies:
+    - orgId: 1
+      receiver: external-alertmanager
+      group_by:
+      - grafana_folder
+      - alertname
+  contactpoints.yaml:
+    apiVersion: 1
+    contactPoints:
+    - orgId: 1
+      name: external-alertmanager
+      receivers:
+      - uid: external_alertmanager_uid
+        type: prometheus-alertmanager
+        disableResolveMessage: false
+        settings:
+          url: http://monitor-alertmanager.observability.svc:9093
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    # - name: Tempo Remote TNS
+    #   type: tempo
+    #   uid: tempo_remote_tns_ds
+    #   access: proxy
+    #   url: http://tempo-query-frontend.tempo.svc:3100
+    #   isDefault: false
+    #   editable: true
+    #   jsonData:
+    #     lokiSearch:
+    #       datasourceUid: loki_remote_tns_ds
+    #     nodeGraph:
+    #       enabled: true
+    #     serviceMap:
+    #       datasourceUid: mimir_remote_tns_ds
+    #     tracesToLogs:
+    #       datasourceUid: loki_remote_tns_ds
+    #     httpHeaderName1: X-Scope-OrgID
+    #     httpMethod: POST
+    #   secureJsonData:
+    #     httpHeaderValue1: remote01
+    # - name: Loki Remote TNS
+    #   type: loki
+    #   uid: loki_remote_tns_ds
+    #   access: proxy
+    #   url: http://loki-gateway.loki.svc
+    #   isDefault: false
+    #   editable: true
+    #   jsonData:
+    #     derivedFields:
+    #     - name: TraceID
+    #       datasourceUid: tempo_remote_tns_ds
+    #       matcherRegex: traceID=(\w+)
+    #       url: $${__value.raw}
+    #     httpHeaderName1: X-Scope-OrgID
+    #     httpMethod: POST
+    #   secureJsonData:
+    #     httpHeaderValue1: remote01
+    # - name: Mimir Remote TNS
+    #   type: prometheus
+    #   uid: mimir_remote_tns_ds
+    #   isDefault: false
+    #   editable: true
+    #   access: proxy
+    #   url: http://mimir-gateway.mimir.svc/prometheus
+    #   jsonData:
+    #     httpHeaderName1: X-Scope-OrgID
+    #     httpMethod: POST
+    #   secureJsonData:
+    #     httpHeaderValue1: remote01
+    # - name: Tempo Remote OTEL
+    #   type: tempo
+    #   uid: tempo_remote_otel_ds
+    #   access: proxy
+    #   url: http://tempo-query-frontend.tempo.svc:3100
+    #   isDefault: false
+    #   editable: true
+    #   jsonData:
+    #     lokiSearch:
+    #       datasourceUid: loki_remote_otel_ds
+    #     nodeGraph:
+    #       enabled: true
+    #     serviceMap:
+    #       datasourceUid: mimir_remote_otel_ds
+    #     tracesToLogs:
+    #       datasourceUid: loki_remote_otel_ds
+    #     httpHeaderName1: X-Scope-OrgID
+    #     httpMethod: POST
+    #   secureJsonData:
+    #     httpHeaderValue1: remote02
+    # - name: Loki Remote OTEL
+    #   type: loki
+    #   uid: loki_remote_otel_ds
+    #   access: proxy
+    #   url: http://loki-gateway.loki.svc
+    #   isDefault: false
+    #   editable: true
+    #   jsonData:
+    #     derivedFields:
+    #     - name: TraceID
+    #       datasourceUid: tempo_remote_otel_ds
+    #       matcherRegex: traceID=(\w+)
+    #       url: $${__value.raw}
+    #     httpHeaderName1: X-Scope-OrgID
+    #     httpMethod: POST
+    #   secureJsonData:
+    #     httpHeaderValue1: remote02
+    # - name: Mimir Remote OTEL
+    #   type: prometheus
+    #   uid: mimir_remote_otel_ds
+    #   isDefault: false
+    #   editable: true
+    #   access: proxy
+    #   url: http://mimir-gateway.mimir.svc/prometheus
+    #   jsonData:
+    #     httpHeaderName1: X-Scope-OrgID
+    #     httpMethod: POST
+    #   secureJsonData:
+    #     httpHeaderValue1: remote02
+    - name: Tempo Local
+      type: tempo
+      uid: tempo_ds
+      access: proxy
+      url: http://tempo-query-frontend.tempo.svc:3100
+      isDefault: false
+      editable: true
+      jsonData:
+        lokiSearch:
+          datasourceUid: loki_ds
+        nodeGraph:
+          enabled: true
+        serviceMap:
+          datasourceUid: mimir_ds
+        tracesToLogs:
+          datasourceUid: loki_ds
+        httpHeaderName1: X-Scope-OrgID
+        httpMethod: POST
+      secureJsonData:
+        httpHeaderValue1: _local
+    - name: Loki Local
+      type: loki
+      uid: loki_ds
+      access: proxy
+      url: http://loki-gateway.loki.svc
+      isDefault: false
+      editable: true
+      jsonData:
+        derivedFields:
+        - name: TraceID
+          datasourceUid: tempo_ds # Might not work
+          matcherRegex: traceID=(\w+)
+          url: $${__value.raw}
+        httpHeaderName1: X-Scope-OrgID
+        httpMethod: POST
+      secureJsonData:
+        httpHeaderValue1: _local
+    - name: Mimir Local
+      type: prometheus
+      uid: mimir_ds
+      isDefault: false
+      editable: true
+      access: proxy
+      url: http://mimir-gateway.mimir.svc/prometheus
+      jsonData:
+        httpHeaderName1: X-Scope-OrgID
+        httpMethod: POST
+      secureJsonData:
+        httpHeaderValue1: _local
+# dashboardProviders:
+#   dashboardproviders.yaml:
+#     apiVersion: 1
+#     providers:
+#     - name: 'default'
+#       orgId: 1
+#       folder: ''
+#       type: file
+#       disableDeletion: false
+#       editable: true
+#       options:
+#         path: /var/lib/grafana/dashboards/default
+  # dashboards:
+  #   default:
+  #     # # Linkerd Dashboards
+  #     # # All these charts are hosted at https://grafana.com/grafana/dashboards/{id}
+  #     # # All of them tested on Grafana 7.1 and need a scrape interval of 10 seconds.
+  #     # linkerd-top-line:
+  #     #   gnetId: 15474
+  #     #   revision: 3
+  #     #   datasource: prometheus
+  #     # linkerd-health:
+  #     #   gnetId: 15486
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-kubernetes:
+  #     #   gnetId: 15479
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-namespace:
+  #     #   gnetId: 15478
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-deployment:
+  #     #   gnetId: 15475
+  #     #   revision: 5
+  #     #   datasource: prometheus
+  #     # linkerd-pod:
+  #     #   gnetId: 15477
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-service:
+  #     #   gnetId: 15480
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-route:
+  #     #   gnetId: 15481
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-authority:
+  #     #   gnetId: 15482
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-cronjob:
+  #     #   gnetId: 15483
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-job:
+  #     #   gnetId: 15487
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-daemonset:
+  #     #   gnetId: 15484
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-replicaset:
+  #     #   gnetId: 15491
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-statefulset:
+  #     #   gnetId: 15493
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-replicationcontroller:
+  #     #   gnetId: 15492
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-prometheus:
+  #     #   gnetId: 15489
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-prometheus-benchmark:
+  #     #   gnetId: 15490
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # linkerd-multicluster:
+  #     #   gnetId: 15488
+  #     #   revision: 2
+  #     #   datasource: prometheus
+  #     # Istio Dashboards
+  #     # istio-control-plane:
+  #     #   gnetId: 7645
+  #     #   revision: 231
+  #     #   datasource: prometheus
+  #     # istio-mesh:
+  #     #   gnetId: 7639
+  #     #   revision: 231
+  #     #   datasource: prometheus
+  #     # istio-service:
+  #     #   gnetId: 7636
+  #     #   revision: 231
+  #     #   datasource: prometheus
+  #     # istio-workload:
+  #     #   gnetId: 7630
+  #     #   revision: 231
+  #     #   datasource: prometheus
+  #     # istio-performance:
+  #     #   gnetId: 11829
+  #     #   revision: 231
+  #     #   datasource: prometheus

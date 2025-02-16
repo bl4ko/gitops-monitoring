@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: microsim
+spec:
+  schedule: "*/5 * * * *"  # Run every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: microsim
+        spec:
+          containers:
+            - name: microsim
+              image: docker.io/yurishkuro/microsim:v0.5.0
+          restartPolicy: Never

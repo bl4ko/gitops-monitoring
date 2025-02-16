@@ -1,14 +1,14 @@
-output "masters_public_ips" {
-  description = "Public IP addresses of master instances"
-  value       = module.masters.instance_public_ips
+output "master_addresses" {
+  description = "The public IP addresses of the master nodes."
+  value       = module.rke2-cluster.master_addresses
 }
 
-output "workers_public_ips" {
-  description = "Public IP addresses of worker instances"
-  value       = module.workers.instance_public_ips
+output "worker_addresses" {
+  description = "The public IP addresses of the worker nodes."
+  value       = module.rke2-cluster.worker_addresses
 }
 
-# output "load_balancer_ip" {
-#   description = "The external IP of the load balancer"
-#   value       = module.load_balancer.lb_ip
-# }
+output "loadbalancer_ip" {
+  description = "The public IP address of the load balancer."
+  value       = module.rke2-cluster.loadbalancer_ip
+}

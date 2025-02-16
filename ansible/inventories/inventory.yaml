@@ -9,4 +9,4 @@ all:
         workers:
           hosts:
             worker-0:
-              ansible_host: 34.116.138.73
+              ansible_host: 34.118.113.207

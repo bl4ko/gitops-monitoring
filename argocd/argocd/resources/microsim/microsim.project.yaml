@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: microsim
+spec:
+  description: "Microsim is a microservices simulator"
+  destinations:
+    - namespace: microsim
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"

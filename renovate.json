@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "argocd": {
+    "fileMatch": [
+      "argocd/.+\\.yaml$"
+    ]
+  },
+  "baseBranches": [
+    "main"
+  ],
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
+    ":pinDevDependencies"
+  ],
+  "pre-commit": {
+    "enabled": true
+  }
+}
+

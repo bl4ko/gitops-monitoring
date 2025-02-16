@@ -1,0 +1,67 @@
+---
+mode: standalone
+
+existingSecret: "minio-root"
+
+consoleIngress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: acme-issuer
+    kube-prometheus.io/ingress.class: "nginx"
+  path: /
+  hosts:
+    - minio.cg.bl4ko.com
+  tls:
+   - secretName: minio-tls
+     hosts:
+       - minio.cg.bl4ko.com
+
+persistence:
+  size: 20Gi
+
+resources:
+  requests:
+    memory: 512Mi
+
+users:
+- accessKey: admin
+  existingSecret: secret-keys
+  existingSecretKey: adminSecretKey
+  policy: consoleAdmin
+- accessKey: remote_user
+  existingSecret: secret-keys
+  existingSecretKey: remoteUserSecretKey
+  policy: readwrite
+
+buckets:
+- name: loki-data
+  policy: none
+  purge: false
+  versioning: false
+- name: loki-ruler
+  policy: none
+  purge: false
+  versioning: false
+- name: tempo-data
+  policy: none
+  purge: false
+  versioning: false
+- name: mimir-data
+  policy: none
+  purge: false
+  versioning: false
+- name: mimir-ruler
+  policy: none
+  purge: false
+  versioning: false
+- name: mimir-alerts
+  policy: none
+  purge: false
+  versioning: false
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: monitor

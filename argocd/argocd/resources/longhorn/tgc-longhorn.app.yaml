@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tgc-longhorn
+  namespace: argocd
+spec:
+  project: longhorn
+  sources:
+    - repoURL: https://charts.longhorn.io
+      targetRevision: 1.8.0
+      chart: longhorn
+      helm:
+        valueFiles:
+          - $values/argocd/longhorn/tgc/values.yml
+    - repoURL: https://github.com/bl4ko/gitops-monitoring.git
+      targetRevision: HEAD
+      ref: values
+    - repoURL: https://github.com/bl4ko/gitops-monitoring.git
+      targetRevision: HEAD
+      path: argocd/longhorn/tgc/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

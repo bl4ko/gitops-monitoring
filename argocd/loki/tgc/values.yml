@@ -1,0 +1,120 @@
+# Warning: there won't be any resource requests/limits for any Loki-related container
+---
+global:
+  dnsService: "rke2-coredns-rke2-coredns"
+
+serviceAccount:
+  create: true
+  name: loki-sa
+
+loki:
+  auth_enabled: true
+  storage:
+    type: s3
+    s3:
+      endpoint: minio.storage.svc:9000
+      accessKeyId: "${S3_ACCESS_KEY_ID}"
+      secretAccessKey: "${S3_SECRET_ACCESS_KEY}"
+      insecure: true
+      s3ForcePathStyle: true
+    bucketNames:
+      chunks: loki-data
+      ruler: loki-ruler
+  storage_config:
+    tsdb_shipper:
+      active_index_directory: /var/loki/tsdb-shipper-active
+      cache_location: /var/loki/tsdb-shipper-cache
+      cache_ttl: 24h
+  rulerConfig:
+    alertmanager_url: http://monitor-alertmanager.observability.svc:9093
+    enable_alertmanager_v2: true
+    enable_sharding: true
+  # https://github.com/grafana/loki/issues/12138#issuecomment-2374698842
+  commonConfig:
+    replication_factor: 1
+  structuredConfig:
+    frontend:
+      scheduler_address: ''
+    frontend_worker:
+      scheduler_address: ''
+    query_scheduler:
+      use_scheduler_ring: true
+      scheduler_ring:
+        kvstore:
+          store: memberlist
+  schemaConfig:
+    configs:
+    - from: '2024-04-08'
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        period: 24h
+        prefix: loki_index_
+  limits_config:
+    ingestion_rate_mb: 10
+    retention_period: 7d # Global Metrics TTL
+  ingester:
+    max_chunk_age: 1h
+  querier:
+    query_ingesters_within: 2h
+  compactor:
+    delete_request_store: s3
+    retention_enabled: true
+    delete_request_cancel_period: 5m
+    retention_delete_delay: 5m
+
+write:
+  replicas: 1
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: loki-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: loki-secret
+          key: S3_SECRET_ACCESS_KEY
+read:
+  replicas: 1
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: loki-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: loki-secret
+          key: S3_SECRET_ACCESS_KEY
+backend:
+  replicas: 1
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: loki-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: loki-secret
+          key: S3_SECRET_ACCESS_KEY
+chunksCache:
+  allocatedMemory: 2048
+  resources:
+    requests:
+      memory: 1024Mi
+      cpu: 100m
+    limits:
+      memory: 2048Mi
+      cpu: 400m

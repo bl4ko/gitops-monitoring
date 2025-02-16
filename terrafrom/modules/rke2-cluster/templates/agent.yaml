@@ -1,0 +1,30 @@
+#cloud-config
+users:
+  - name: ${ci_username}
+    groups:
+      - wheel
+    gecos: "CI user created by Cloud-Init"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ci_pubkey}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    passwd: ${ci_hashed_password}
+  - name: ${username}
+    shell: /bin/bash
+    groups:
+      - wheel
+    sudo: ALL=(ALL) ALL
+    gecos: "Main user provisioned by Cloud-Init"
+    ssh_authorized_keys:
+      - ${user_pubkey}
+    lock_passwd: false
+    passwd: ${hashed_password}
+runcmd:
+  - sudo dnf update -y
+  - sudo dnf install curl iptables -y
+  # - export INSTALL_RKE2_TYPE="agent"
+  # - curl -sfL https://get.rke2.io | sudo sh -
+  # - sudo systemctl enable --now rke2-agent.service
+  # - sudo systemctl status rke2-agent.service
+  - echo "done" /tmp/cloud-config.done
+

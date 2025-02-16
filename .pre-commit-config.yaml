@@ -52,7 +52,7 @@ repos:
     rev: v25.1.2
     hooks:
       - id: ansible-lint
-        entry: ./ansible/venv/bin/python -m ansiblelint --project-dir ansible --exclude ansible/collections/*
+        entry: ./ansible/venv/bin/python -m ansiblelint --project-dir ansible --config-file ./ansible/.ansible-lint.yml
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
     rev: v8.17.2

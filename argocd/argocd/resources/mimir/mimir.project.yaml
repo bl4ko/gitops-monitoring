@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: mimir
+spec:
+  description: |
+    Grafana Mimir enables users to ingest Prometheus or OpenTelemetry metrics, run queries,
+    create new data through the use of recording rules, and set up alerting rules across
+    multiple tenants to leverage tenant federation.
+  destinations:
+    - namespace: mimir
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://grafana.github.io/helm-charts"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"

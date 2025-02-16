@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: grafana
+spec:
+  description: |
+    Grafana is a multi-platform open source analytics and interactive visualization web application.
+  destinations:
+    - namespace: grafana
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://grafana.github.io/helm-charts"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding

@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: prometheus-operator-crds
+spec:
+  description: "Prometheus operator CRDs manages the CRDs for the Prometheus Operator"
+  destinations:
+    - server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://prometheus-community.github.io/helm-charts"
+  clusterResourceWhitelist:
+    - group: "apiextensions.k8s.io"
+      kind: "CustomResourceDefinition"

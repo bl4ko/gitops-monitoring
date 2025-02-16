@@ -22,7 +22,7 @@
     name: "{{ item.1 }}"
     state: present
     persistent: present
-  loop: "{{ longhorn_nodes | product(['nvme_tcp', 'uio_pci_generic']) | list }}"
+  loop: "{{ longhorn_nodes | product(['nvme_tcp', 'uio_pci_generic', 'dm_crypt']) | list }}"
   loop_control:
     label: "{{ item.0 }}: {{ item.1 }}"
 

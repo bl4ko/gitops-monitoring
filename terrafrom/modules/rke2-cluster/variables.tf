@@ -1,0 +1,16 @@
+variable "master_machine_type" {}
+variable "agent_machine_type" {}
+variable "gcp_zone" {}
+variable "name_prefix" {}
+variable "master_count" {}
+variable "agent_count" {}
+variable "vpc_name" {}
+variable "subnetwork_name" {}
+variable "instance_image" {}
+variable "ci_username" {}
+variable "ci_passwd" {}
+variable "ci_pubkey_path" {}
+variable "username" {}
+variable "passwd" {}
+variable "passwd_salt" {}
+variable "pubkey_path" {}

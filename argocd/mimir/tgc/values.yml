@@ -1,0 +1,229 @@
+# Warning: there won't be any resource requests/limits for any Mimir-related container
+---
+serviceAccount: # There is no way to set an account per component
+  create: true
+  name: mimir-sa
+
+global:
+  dnsService: "rke2-coredns-rke2-coredns"
+  extraEnv:
+  - name: JAEGER_ENDPOINT
+    value: 'http://grafana-alloy.observability.svc:14268/api/traces'
+  - name: JAEGER_SAMPLER_TYPE
+    value: 'const'
+  - name: JAEGER_SAMPLER_PARAM
+    value: '1'
+
+rbac:
+  create: false
+
+mimir:
+  structuredConfig:
+    multitenancy_enabled: true
+    usage_stats:
+      enabled: false
+    server:
+      grpc_server_max_concurrent_streams: 1000
+    common:
+      storage:
+        backend: s3
+        s3: # Based on values-minio.yaml
+          endpoint: minio.storage.svc:9000
+          access_key_id: remote_user
+          secret_access_key: R3m0t3us3r
+          insecure: true
+    distributor:
+      instance_limits:
+        max_ingestion_rate: 30000 # Per-distributor rate limit
+        max_inflight_push_requests: 250
+    frontend:
+      log_queries_longer_than: 1m
+    querier:
+      query_store_after: 3h # < query_ingesters_within (default: 12h)
+    limits:
+      ingestion_rate: 30000 # Per-user rate limit
+      max_global_series_per_user: 1000000 # To accomodate one big tenant
+      max_global_series_per_metric: 100000
+      max_label_names_per_series: 100
+      cardinality_analysis_enabled: true
+      compactor_blocks_retention_period: 7d # Global Metrics TTL
+      query_ingesters_within: 4h # > query_store_after (default: 13h)
+      # Allow ingestion of out-of-order samples up to X minutes since the latest received sample for the series.
+      # https://grafana.com/docs/mimir/latest/operators-guide/configure/configure-out-of-order-samples-ingestion/
+      out_of_order_time_window: 15m
+      max_cache_freshness: 15m
+    ruler:
+      alertmanager_url: http://monitor-alertmanager.observability.svc:9093
+    blocks_storage:
+      bucket_store:
+        ignore_blocks_within: 3h # < query_store_after (default: 10h)
+      tsdb:
+        retention_period: 6h # > query_store_after (default: 13h)
+      s3:
+        bucket_name: mimir-data
+    ruler_storage:
+      s3:
+        bucket_name: mimir-ruler
+    alertmanager_storage:
+      s3:
+        bucket_name: mimir-alerts
+
+runtimeConfig:
+  ingester_limits:
+    max_inflight_push_requests: 250
+    max_ingestion_rate: 30000
+    max_series: 1000000
+
+gateway:
+  enabledNonEnterprise: true
+
+alertmanager:
+  enabled: false
+
+minio:
+  enabled: false
+
+rollout_operator:
+  enabled: false
+
+overrides_exporter:
+  resources: {}
+
+ruler:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+  initContainers:
+  - name: wait-chunks
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'until nslookup mimir-chunks-cache; do echo waiting for memcached; sleep 1; done']
+  - name: wait-metadata
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'until nslookup mimir-metadata-cache; do echo waiting for memcached; sleep 1; done']
+
+
+distributor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 40Mi
+
+ingester:
+  replicas: 2
+  persistentVolume:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 10m
+      memory: 40Mi
+  zoneAwareReplication:
+    enabled: false
+
+compactor:
+  replicas: 1
+  persistentVolume:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 10m
+      memory: 40Mi
+
+querier:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 40Mi
+  initContainers:
+  - name: wait-metadata
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'until nslookup mimir-metadata-cache; do echo waiting for memcached; sleep 1; done']
+
+query_frontend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 40Mi
+  initContainers:
+  - name: wait-results
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'until nslookup mimir-results-cache; do echo waiting for memcached; sleep 1; done']
+
+query_scheduler:
+  replicas: 1
+
+store_gateway:
+  replicas: 1
+  persistentVolume:
+    size: 5Gi
+  resources: {}
+  zoneAwareReplication:
+    enabled: false
+  initContainers:
+  - name: wait-metadata
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'until nslookup mimir-metadata-cache; do echo waiting for memcached; sleep 1; done']
+  - name: wait-chunks
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'until nslookup mimir-chunks-cache; do echo waiting for memcached; sleep 1; done']
+
+chunks-cache:
+  enabled: true
+  replicas: 1
+  allocatedMemory: 1024
+  resources:
+    requests:
+      cpu: 25m
+      memory: 100Mi
+
+index-cache:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 768
+  resources:
+    requests:
+      cpu: 25m
+      memory: 100Mi
+
+metadata-cache:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 384
+  resources:
+    requests:
+      cpu: 25m
+      memory: 100Mi
+
+results-cache:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 512
+  resources:
+    requests:
+      cpu: 25m
+      memory: 100Mi
+
+metaMonitoring:
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: monitor
+  dashboards:
+    enabled: true
+    labels:
+      release: monitor
+  prometheusRule:
+    enabled: true
+    mimirAlerts: true
+    mimirRules: true
+    labels:
+      release: monitor

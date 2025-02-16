@@ -2,14 +2,14 @@ applicationSet:
   webhook:
     ingress:
       enabled: true
-controller:
-  resources:
-    limits:
-      cpu: 2000m
-      memory: 2000Mi
-    requests:
-      cpu: 500m
-      memory: 500Mi
+# controller:
+#   resources:
+#     limits:
+#       cpu: 2000m
+#       memory: 2000Mi
+#     requests:
+#       cpu: 500m
+#       memory: 500Mi
   # metrics:
   #   enabled: true
   #   serviceMonitor:

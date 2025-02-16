@@ -1,31 +1,45 @@
-variable "project" {
+variable "name_prefix" {
+  description = "Name prefix for the resources"
+  type        = string
+  default = "cg-rke2"
+}
+
+variable "allowed_ips" {
+  description = "Home IP address"
+  type        = list(string)
+  default = ["0.0.0.0/0"]
+}
+
+variable "gcp_project" {
   description = "GCP project id"
   type        = string
 }
 
-variable "region" {
+variable "gcp_region" {
   description = "GCP region"
   type        = string
+  default = "europe-central2"
 }
 
-variable "zone" {
+variable "gcp_zone" {
   description = "GCP zone"
   type        = string
+  default    = "europe-central2a"
 }
 
-variable "credentials_file" {
+variable "gcp_credentials_file" {
   description = "Path to GCP credentials JSON file"
   type        = string
 }
 
-variable "masters_count" {
+variable "master_count" {
   description = "Number of master nodes"
   type        = number
   default     = 1
 }
 
-variable "workers_count" {
-  description = "Number of worker nodes"
+variable "agent_count" {
+  description = "Number of agent/worker nodes"
   type        = number
   default     = 1
 }
@@ -33,24 +47,19 @@ variable "workers_count" {
 variable "master_machine_type" {
   description = "Machine type for master nodes"
   type        = string
-  default     = "e2-medium"
+  default     = "n2-standard-2"
 }
 
-variable "worker_machine_type" {
+variable "agent_machine_type" {
   description = "Machine type for worker nodes"
   type        = string
-  default     = "e2-medium"
+  default     = "n2-standard-4"
 }
 
-variable "image" {
-  description = "AlmaLinux image for VMs"
+variable "instance_image" {
+  description = "Image for the vm instance"
   type        = string
-}
-
-variable "network" {
-  description = "GCP network to use"
-  type        = string
-  default     = "k8s-network"
+  default = "almalinux-cloud/almalinux-9-v20250212"
 }
 
 variable "ci_username" {
@@ -62,12 +71,6 @@ variable "ci_passwd" {
   description = "CI user password"
   type        = string
 }
-
-variable "ci_user_extra_groups" {
-  description = "List of groups for the CI user"
-  type        = list(string)
-}
-
 
 variable "ci_pubkey_path" {
   description = "Path to the public key for the CI user"
@@ -87,12 +90,6 @@ variable "passwd" {
 variable "passwd_salt" {
   description = "Salt used for hashing the password"
   type        = string
-}
-
-
-variable "user_extra_groups" {
-  description = "List of groups for the main user"
-  type        = list(string)
 }
 
 variable "pubkey_path" {

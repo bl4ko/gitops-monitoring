@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  description: "Argocd is a declarative, GitOps continuous delivery tool for Kubernetes."
+  destinations:
+    - name: "*"
+      namespace: "*"
+      server: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://argoproj.github.io/argo-helm"

@@ -1,0 +1,164 @@
+
+nameOverride: monitor
+fullnameOverride: monitor
+cleanPrometheusOperatorObjectNames: true
+crds:
+  enabled: false
+defaultRules:
+  rules:
+    alertmanager: false
+    etcd: false
+    kubeControllerManager: false
+    kubeScheduler: false
+    kubeProxy: false
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+alertmanager:
+  enabled: true
+  serviceAccount:
+    create: true
+    name: alertmanager-sa
+  alertmanagerSpec:
+    resources: null
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+  ingress:
+    enabled: true
+    hosts:
+      - alertmanager.cg.bl4ko.com
+    annotations:
+      cert-manager.io/cluster-issuer: acme-issuer
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.cg.bl4ko.com
+
+  # https://prometheus.io/docs/alerting/latest/configuration/#file-layout-and-global-settings
+  config:
+    # route is the top-level routing configuration for Alertmanager.
+    # It defines the parameters for alert grouping and inhibition.
+    route:
+      # This is the top-level route. All alerts will follow this route.
+      group_by: ["alertname", "job"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 6h
+      receiver: "discord"
+      # Remove any additional sub-routes to send all alerts to Discord.
+      # If you want to filter out certain alerts (like Watchdog), you could add a route here.
+      # routes: []
+      routes:
+        - receiver: "null"
+          matchers:
+            - alertname = "Watchdog"
+    # Receivers are the endpoints to send notifications to.
+    receivers:
+      - name: 'null'
+      # - name: "discord"
+      #   discord_configs:
+      #   - webhook_url: ""
+      #     username: "Alertmanager"
+      #     avatar_url: "https://avatars3.githubusercontent.com/u/3380462"
+          # title: <tmpl_string> | default = '{{ template "discord.default.title" . }}'
+          # message: <tmpl_string> | default = '{{ template "discord.default.message" . }}'
+          # content: <tmpl_string> | default = '{{ template "discord.default.content" . }}'
+
+    # Inhibit rules allow you to suppress alerts given certain conditions.
+    inhibit_rules:
+      - source_matchers:
+          - 'severity = critical'
+        target_matchers:
+          - 'severity =~ warning|info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'severity = warning'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'alertname = InfoInhibitor'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+      - target_matchers:
+          - 'alertname = InfoInhibitor'
+
+
+# prometheus-node-exporter:
+  # podLabels:
+  #   sidecar.istio.io/inject: 'true'
+  # podAnnotations:
+  #   linkerd.io/inject: 'enabled'
+
+prometheusOperator:
+  serviceAccount:
+    create: true
+    name: promoperator-sa
+  # admissionWebhooks:
+  #   patch:
+  #     podAnnotations:
+  #       linkerd.io/inject: 'disabled'
+  #       sidecar.istio.io/inject: 'false'
+  # prometheusConfigReloader:
+    # resources:
+      # requests:
+      #   cpu: 50m
+      #   memory: 50Mi
+      # limits:
+      #   cpu: 50m
+      #   memory: 50Mi
+
+prometheus:
+  # https://github.com/argoproj/argo-cd/issues/11261#issuecomment-1456296946
+  annotations:
+    argocd.argoproj.io/skip-health-check: 'true'
+  serviceAccount:
+    create: true
+    name: prometheus-sa
+  prometheusSpec:
+    enableRemoteWriteReceiver: true # For Tempo Metrics GeneratorV
+    remoteWrite:
+      - url: http://mimir-distributor.mimir.svc:8080/api/v1/push
+        headers:
+          X-Scope-OrgID: _local
+        queueConfig:
+          capacity: 5000
+          minShards: 1
+          maxShards: 50
+          maxSamplesPerSend: 2000
+        writeRelabelConfigs:
+        - sourceLabels: [namespace]
+          regex: "^linkerd.*"
+          action: drop
+    enableFeatures:
+    - exemplar-storage
+    scrapeInterval: 30s
+    retention: 7d
+    resources: null
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+
+grafana:
+  enabled: false

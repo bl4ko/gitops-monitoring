@@ -1,0 +1,31 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: minio-values-repo
+  namespace: argocd
+spec:
+  secretStoreRef:
+    name: bitwarden-cluster-secret-store
+    kind: ClusterSecretStore
+  target:
+    name: minio-repo
+    deletionPolicy: Delete
+    template:
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        type: git
+        url: "https://github.com/bl4ko/gitops-monitoring.git"
+        username: |-
+          {{ .username }}
+        password: |-
+          {{ .password }}
+        project: "minio"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: gitops-repo-user
+    - secretKey: password
+      remoteRef:
+        key: gitops-repo-pat

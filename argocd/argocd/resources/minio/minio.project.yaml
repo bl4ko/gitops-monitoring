@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: minio
+spec:
+  description: |
+   minio is a high performance distributed object storage server,
+   designed for large-scale private cloud infrastructure.
+  destinations:
+    - namespace: storage
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://charts.min.io/"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"

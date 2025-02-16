@@ -1,0 +1,48 @@
+global:
+  meshID: mesh1
+  multiCluster:
+    clusterName: tgc
+  network: tgc
+  proxy:
+    resources:
+      limits:
+        cpu: "0"
+        memory: "0"
+      requests:
+        cpu: "0"
+        memory: "0"
+  proxy_init:
+    resources:
+      limits:
+        cpu: "0"
+        memory: "0"
+      requests:
+        cpu: "0"
+        memory: "0"
+
+meshConfig:
+  defaultConfig:
+    holdApplicationUntilProxyStarts: true
+    proxyMetadata:
+      ISTIO_META_DNS_CAPTURE: "true"
+      ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+  enableTracing: true
+  extensionProviders:
+    - name: otel-tracing
+      opentelemetry:
+        port: 4317
+        service: grafana-alloy.observability.svc.cluster.local
+        resource_detectors:
+          environment: {}
+
+# Override the default replica count for Pilot
+replicaCount: 1
+
+# Configure affinity so that Pilot pods avoid co‑scheduling on the same host
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app: istiod
+        topologyKey: kubernetes.io/hostname

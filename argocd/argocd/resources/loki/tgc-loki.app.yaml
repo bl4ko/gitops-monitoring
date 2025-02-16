@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tgc-loki
+spec:
+  project: loki
+  sources:
+    - repoURL: "https://grafana.github.io/helm-charts"
+      targetRevision: 6.27.0
+      chart: loki
+      helm:
+        valueFiles:
+          - $values/argocd/loki/tgc/values.yml
+        releaseName: loki
+    - repoURL: "https://github.com/bl4ko/gitops-monitoring"
+      targetRevision: HEAD
+      ref: values
+    - repoURL: "https://github.com/bl4ko/gitops-monitoring"
+      targetRevision: HEAD
+      path: argocd/loki/tgc/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: loki
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tgc-minio
+spec:
+  project: minio
+  sources:
+    - repoURL: "https://charts.min.io/"
+      targetRevision: 5.4.0
+      chart: minio
+      helm:
+        valueFiles:
+          - $values/argocd/minio/tgc/values.yml
+        releaseName: minio
+    - repoURL: "https://github.com/bl4ko/gitops-monitoring"
+      targetRevision: HEAD
+      ref: values
+    - repoURL: "https://github.com/bl4ko/gitops-monitoring"
+      targetRevision: HEAD
+      path: argocd/minio/tgc/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: storage
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

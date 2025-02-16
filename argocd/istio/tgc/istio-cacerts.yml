@@ -1,0 +1,36 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: cacerts
+  namespace: istio-system
+spec:
+  secretStoreRef:
+    name: bitwarden-cluster-secret-store
+    kind: ClusterSecretStore
+  target:
+    name: cacerts
+    deletionPolicy: Delete
+    type: Opaque
+    template:
+      data:
+        ca-cert.pem: |-
+          {{ .ca-cert.pem }}
+        ca-key.pem: |-
+          {{ .ca-key.pem }}
+        cert-chain.pem: |-
+          {{ .cert-chain.pem }}
+        root-cert.pem: |-
+          {{ .root-cert.pem }}
+  data:
+    - secretKey: ca-cert.pem
+      remoteRef:
+        key: istio-issuer-central.crt
+    - secretKey: ca-key.pem
+      remoteRef:
+        key: istio-issuer-central.key
+    - secretKey: cert-chain.pem
+      remoteRef:
+        key: istio-issuer-central-chain.crt
+    - secretKey: root-cert.pem
+      remoteRef:
+        key: istio-root-ca.crt

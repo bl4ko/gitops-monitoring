@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tgc-prometheus-operator-crds
+spec:
+  project: prometheus-operator-crds
+  sources:
+    - repoURL: "https://prometheus-community.github.io/helm-charts"
+      targetRevision: 18.0.0
+      chart: prometheus-operator-crds
+      helm:
+        releaseName: prometheus-operator-crds
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - PruneLast=true
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -30,25 +30,25 @@
     kubeconfig: "{{ host_kubeconfig_path }}"
     namespace: argocd
     state: present
-    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd-chart.repo.yaml') }}"
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd-chart.repo.yml') }}"
 
 - name: Deploy argocd values repo manifest
   kubernetes.core.k8s:
     kubeconfig: "{{ host_kubeconfig_path }}"
     namespace: argocd
     state: present
-    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd-values.repo.externalsecret.yaml') }}"
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd-values.repo.externalsecret.yml') }}"
 
 - name: Deploy argocd project manifest
   kubernetes.core.k8s:
     kubeconfig: "{{ host_kubeconfig_path }}"
     namespace: argocd
     state: present
-    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd.project.yaml') }}"
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd.project.yml') }}"
 
 - name: Deploy argocd app manifest
   kubernetes.core.k8s:
     kubeconfig: "{{ host_kubeconfig_path }}"
     namespace: argocd
     state: present
-    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd.app.yaml') }}"
+    resource_definition: "{{ lookup('file', '../../argocd/argocd/argocd.app.yml') }}"

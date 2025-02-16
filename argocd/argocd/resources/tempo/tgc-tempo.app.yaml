@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tgc-tempo
+spec:
+  project: tempo
+  sources:
+    - repoURL: "https://grafana.github.io/helm-charts"
+      targetRevision: 1.32.1
+      chart: tempo-distributed
+      helm:
+        valueFiles:
+          - $values/argocd/tempo/tgc/values.yml
+        releaseName: tempo
+    - repoURL: "https://github.com/bl4ko/gitops-monitoring"
+      targetRevision: HEAD
+      ref: values
+    - repoURL: "https://github.com/bl4ko/gitops-monitoring"
+      targetRevision: HEAD
+      path: argocd/tempo/tgc/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tempo
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

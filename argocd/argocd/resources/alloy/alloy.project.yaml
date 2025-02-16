@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: alloy
+spec:
+  description: "Alloy is an agent that collects logs, metrics, and traces"
+  destinations:
+    - namespace: observability
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://grafana.github.io/helm-charts"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition

@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: tempo
+spec:
+  description: |
+    Tempo is an easy-to-operate, high-scale, and cost-effective distributed tracing system.
+  destinations:
+    - namespace: tempo
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "https://github.com/bl4ko/gitops-monitoring.git"
+    - "https://grafana.github.io/helm-charts"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "Namespace"
